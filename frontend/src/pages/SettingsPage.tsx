@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Save, Key, Radio, Monitor, Sliders } from "lucide-react";
+import { Save, Key, Radio, Monitor, Sliders, Music } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ export function SettingsPage() {
   const updateSettings = useUpdateSettings();
   const [local, setLocal] = useState<Record<string, unknown>>({});
   const [apiKeyInput, setApiKeyInput] = useState("");
+  const [tkSessionInput, setTkSessionInput] = useState("");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -34,10 +35,12 @@ export function SettingsPage() {
       "default_aspect_ratio", "theme", "language", "auto_save"]) {
       if (key in local) payload[key] = local[key];
     }
+    if (tkSessionInput.trim()) payload.tiktok_session_id = tkSessionInput.trim();
     updateSettings.mutate(payload, {
       onSuccess: () => {
         setSaved(true);
         setApiKeyInput("");
+        setTkSessionInput("");
         setTimeout(() => setSaved(false), 2000);
       },
     });
@@ -195,6 +198,35 @@ export function SettingsPage() {
                 onChange={(e) => setLocal({ ...local, edge_tts_volume: e.target.value })}
               />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Music size={16} className="text-primary" />
+            TikTok TTS
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Session ID</label>
+            <div className="flex items-center gap-2 mb-2">
+              <div className={cn("w-2 h-2 rounded-full", local.tiktok_session_id_set ? "bg-green-400" : "bg-red-400")} />
+              <span className="text-xs text-muted-foreground">
+                {local.tiktok_session_id_set ? "Session ID is configured" : "Session ID not set"}
+              </span>
+            </div>
+            <Input
+              type="password"
+              placeholder={local.tiktok_session_id_set ? "Enter new session ID to replace" : "Enter your TikTok session ID"}
+              value={tkSessionInput}
+              onChange={(e) => setTkSessionInput(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Get session ID from TikTok cookie (<code>sessionid</code>) after logging in on tiktok.com
+            </p>
           </div>
         </CardContent>
       </Card>

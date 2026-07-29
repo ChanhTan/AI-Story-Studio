@@ -167,7 +167,11 @@ class GeminiService:
             "all_failed"
         )
 
-    def analyze_story(self, story: str) -> List[Scene]:
+    def analyze_story(self, story: str, num_scenes: int = None) -> List[Scene]:
+        scenes_instruction = ""
+        if num_scenes and num_scenes > 0:
+            scenes_instruction = f"- Split the story into exactly {num_scenes} scenes\n"
+
         prompt = f"""Analyze the following story and split it into cinematic scenes.
 
 For each scene, provide:
@@ -177,7 +181,7 @@ For each scene, provide:
 4. narration_text: the narration text for this scene
 
 Rules:
-- Each scene should be 15-30 seconds of narration
+{scenes_instruction}- Each scene should be 15-30 seconds of narration
 - Image prompts must be detailed, cinematic, self-contained
 - Narration flows naturally
 - Return ONLY valid JSON array, no markdown
