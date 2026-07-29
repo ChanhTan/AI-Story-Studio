@@ -20,6 +20,7 @@ class ImageStyle(str, Enum):
     cinematic = "Cinematic"
     fantasy = "Fantasy"
     anime = "Anime"
+    cartoon = "Cartoon"
     minecraft = "Minecraft"
     pixel_art = "Pixel Art"
     horror = "Horror"
@@ -42,7 +43,8 @@ class KenBurnsEffect(str, Enum):
 
 
 class VoiceSettings(BaseModel):
-    voice: str = "en-US-JennyNeural"
+    provider: str = "gtts"
+    voice: str = "en-US"
     rate: str = "0%"
     pitch: str = "0%"
     volume: str = "0%"
@@ -71,7 +73,7 @@ class MusicSettings(BaseModel):
 
 
 class VideoEffect(BaseModel):
-    ken_burns: KenBurnsEffect = KenBurnsEffect.zoom_in
+    ken_burns: KenBurnsEffect = KenBurnsEffect.none
     fade: bool = True
     cross_fade: bool = True
     blur: bool = False
@@ -117,6 +119,7 @@ class GenerateAllRequest(BaseModel):
     video_effect: VideoEffect = VideoEffect()
     fps: int = 30
     resolution: str = "1920x1080"
+    num_scenes: Optional[int] = None
 
 
 class TaskStatus(BaseModel):

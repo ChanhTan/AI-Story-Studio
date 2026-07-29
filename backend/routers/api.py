@@ -164,7 +164,7 @@ async def generate_all(req: GenerateAllRequest, background_tasks: BackgroundTask
 
         try:
             logger.info(f"Pipeline {task_id}: Starting story analysis")
-            scenes = gemini_service.analyze_story(req.story)
+            scenes = gemini_service.analyze_story(req.story, req.num_scenes)
             task.total_scenes = len(scenes)
             update_task(task_id, current_task="Generating images", total_scenes=len(scenes))
             logger.info(f"Pipeline {task_id}: Story analyzed - {len(scenes)} scenes")
@@ -287,6 +287,8 @@ async def resume_task(task_id: str):
 async def get_settings():
     key = settings.gemini_api_key
     masked = key[:8] + "..." if len(key) > 8 else ""
+    tk = settings.tiktok_session_id
+    tk_masked = tk[:12] + "..." if len(tk) > 12 else ""
     return {
         "gemini_api_key": masked,
         "gemini_api_key_set": bool(key),
@@ -295,6 +297,8 @@ async def get_settings():
         "edge_tts_rate": settings.edge_tts_rate,
         "edge_tts_pitch": settings.edge_tts_pitch,
         "edge_tts_volume": settings.edge_tts_volume,
+        "tiktok_session_id": tk_masked,
+        "tiktok_session_id_set": bool(tk),
         "max_concurrent_tabs": settings.max_concurrent_tabs,
         "perchance_timeout": settings.perchance_timeout,
         "retry_count": settings.retry_count,

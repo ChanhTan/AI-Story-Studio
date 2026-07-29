@@ -9,10 +9,12 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
 
-    edge_tts_voice: str = "en-US-JennyNeural"
+    edge_tts_voice: str = "en-US"
     edge_tts_rate: str = "0%"
     edge_tts_pitch: str = "0%"
     edge_tts_volume: str = "0%"
+
+    tiktok_session_id: str = ""
 
     ffmpeg_path: str = "ffmpeg"
     download_folder: str = str(BASE_DIR / "download")

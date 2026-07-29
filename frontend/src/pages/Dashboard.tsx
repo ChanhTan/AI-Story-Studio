@@ -9,13 +9,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Select } from "@/components/ui/select";
 import { LogViewer } from "@/components/LogViewer";
 import { apiFetch } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
+const ASPECT_OPTIONS = {
+  "16:9": { label: "16:9 (Ngang)", resolution: "1920x1080" },
+  "9:16": { label: "9:16 (Dọc)", resolution: "1080x1920" },
+};
+
 export function Dashboard({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const [story, setStory] = useState("");
   const [taskId, setTaskId] = useState<string | null>(null);
+  const [aspectRatio, setAspectRatio] = useState("16:9");
+  const [numScenes, setNumScenes] = useState<number>(0);
+  const [voice, setVoice] = useState("en-US");
+  const [style, setStyle] = useState("Anime");
+  const [rate, setRate] = useState(0);
+  const [voiceProvider, setVoiceProvider] = useState("gtts");
 
   const wordCount = story.trim() ? story.trim().split(/\s+/).length : 0;
   const estimatedDuration = Math.round(wordCount * 0.3);
@@ -49,25 +61,27 @@ export function Dashboard({ onNavigate }: { onNavigate: (tab: string) => void })
 
   const handleGenerateAll = useCallback(async () => {
     if (!story.trim()) return;
+    const res = ASPECT_OPTIONS[aspectRatio as keyof typeof ASPECT_OPTIONS]?.resolution || "1920x1080";
     try {
       const data = await apiFetch<{ task_id: string }>("/api/generate-all", {
         method: "POST",
         body: JSON.stringify({
           story,
-          style: "Cinematic",
-          aspect_ratio: "16:9",
-          voice_settings: { voice: "en-US-JennyNeural", rate: "0%", pitch: "0%", volume: "0%", language: "en" },
+          style,
+          aspect_ratio: aspectRatio,
+          voice_settings: { provider: voiceProvider, voice, rate: `${rate >= 0 ? '+' : ''}${rate}%`, pitch: "0%", volume: "0%", language: voice },
           subtitle_settings: { enabled: true, format: "srt", burn: true, font: "Arial", font_size: 24, outline: true, shadow: true, color: "#FFFFFF", animation: "fade" },
           music_settings: { enabled: false, volume: 0.3, fade_in: 2, fade_out: 3, loop: true },
-          video_effect: { ken_burns: "Zoom In", fade: true, cross_fade: true, blur: false, film_grain: false, vignette: false, motion_blur: false, light_shake: false },
-          fps: 30, resolution: "1920x1080",
+          video_effect: { ken_burns: "none", fade: true, cross_fade: true, blur: false, film_grain: false, vignette: false, motion_blur: false, light_shake: false },
+          fps: 30, resolution: res,
+          num_scenes: numScenes > 0 ? numScenes : null,
         }),
       });
       setTaskId(data.task_id);
     } catch (err) {
       alert("Error: " + (err as Error).message);
     }
-  }, [story]);
+  }, [story, aspectRatio, numScenes, voice, style, rate, voiceProvider]);
 
   const handleCancel = useCallback(async () => {
     if (taskId) {
@@ -181,6 +195,118 @@ export function Dashboard({ onNavigate }: { onNavigate: (tab: string) => void })
         <div className="space-y-4">
           <Card>
             <CardContent className="p-4 space-y-3">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Aspect Ratio</label>
+                <Select
+                  value={aspectRatio}
+                  onChange={(e) => setAspectRatio(e.target.value)}
+                  options={[
+                    { label: "16:9 (Ngang)", value: "16:9" },
+                    { label: "9:16 (Dọc)", value: "9:16" },
+                  ]}
+                  disabled={isGenerating}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Số scene (0 = tự động)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={numScenes}
+                  onChange={(e) => setNumScenes(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-full premium-input px-3 py-2 text-sm"
+                  disabled={isGenerating}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Phong cách ảnh</label>
+                <Select
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value)}
+                  options={[
+                    { label: "Anime", value: "Anime" },
+                    { label: "Cartoon", value: "Cartoon" },
+                    { label: "Cinematic", value: "Cinematic" },
+                    { label: "Realistic", value: "Realistic" },
+                    { label: "Fantasy", value: "Fantasy" },
+                    { label: "Pixel Art", value: "Pixel Art" },
+                    { label: "Minecraft", value: "Minecraft" },
+                    { label: "Horror", value: "Horror" },
+                    { label: "Sci-Fi", value: "Sci-Fi" },
+                  ]}
+                  disabled={isGenerating}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Công cụ TTS</label>
+                <Select
+                  value={voiceProvider}
+                  onChange={(e) => { setVoiceProvider(e.target.value); setVoice("en-US"); }}
+                  options={[
+                    { label: "Google TTS (mặc định)", value: "gtts" },
+                    { label: "TikTok TTS", value: "tiktok" },
+                  ]}
+                  disabled={isGenerating}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Giọng đọc</label>
+                {voiceProvider === "tiktok" ? (
+                  <Select
+                    value={voice}
+                    onChange={(e) => setVoice(e.target.value)}
+                    options={[
+                      { label: "US Nữ (Jessie)", value: "en-US-Female" },
+                      { label: "US Nam trầm (Adam)", value: "en-US-Deep-Male" },
+                      { label: "US Nam", value: "en-US-Male" },
+                      { label: "US Nam trẻ", value: "en-US-Young-Male" },
+                      { label: "US Nữ trẻ", value: "en-US-Young-Female" },
+                      { label: "US Nữ nghiêm túc", value: "en-US-Serious-Female" },
+                      { label: "UK Nam", value: "en-UK-Male" },
+                      { label: "UK Nữ", value: "en-UK-Female" },
+                      { label: "VN Nữ (Cô Gái Hoạt Ngôn)", value: "vi-VN-Female" },
+                      { label: "VN Nam (Thanh Niên Tự Tin)", value: "vi-VN-Male" },
+                    ]}
+                    disabled={isGenerating}
+                  />
+                ) : (
+                  <Select
+                    value={voice}
+                    onChange={(e) => setVoice(e.target.value)}
+                    options={[
+                      { label: "English (US)", value: "en-US" },
+                      { label: "English (UK)", value: "en-GB" },
+                      { label: "English (Australia)", value: "en-AU" },
+                      { label: "English (India)", value: "en-IN" },
+                      { label: "Tiếng Việt", value: "vi-VN" },
+                      { label: "Japanese", value: "ja-JP" },
+                      { label: "Korean", value: "ko-KR" },
+                      { label: "Chinese", value: "zh-CN" },
+                      { label: "French", value: "fr-FR" },
+                      { label: "German", value: "de-DE" },
+                      { label: "Spanish", value: "es-ES" },
+                      { label: "Portuguese (Brazil)", value: "pt-BR" },
+                      { label: "Russian", value: "ru-RU" },
+                      { label: "Italian", value: "it-IT" },
+                    ]}
+                    disabled={isGenerating}
+                  />
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Tốc độ đọc: {rate > 0 ? '+' : ''}{rate}%</label>
+                <input
+                  type="range"
+                  min={-75}
+                  max={100}
+                  step={5}
+                  value={rate}
+                  onChange={(e) => setRate(parseInt(e.target.value))}
+                  className="w-full"
+                  disabled={isGenerating}
+                />
+              </div>
               <Button className="w-full" size="lg" disabled={!story.trim() || isGenerating} onClick={handleGenerateAll}>
                 <Sparkles size={18} />
                 Generate All

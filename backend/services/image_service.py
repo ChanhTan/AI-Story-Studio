@@ -14,6 +14,7 @@ STYLE_PROMPTS = {
     "Cinematic": "cinematic, dramatic lighting, anamorphic, movie scene",
     "Fantasy": "fantasy art, magical, ethereal, glowing, epic fantasy",
     "Anime": "anime style, cel shaded, vibrant colors, Japanese animation",
+    "Cartoon": "cartoon style, vibrant colors, hand-drawn, 2D animation style",
     "Minecraft": "Minecraft style, blocky, pixelated, voxel art",
     "Pixel Art": "pixel art, 16-bit, retro, chunky pixels, game sprite",
     "Horror": "horror, dark, frightening, creepy atmosphere, gothic",
